@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  event-driven-file-management
+
+Resources:
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+
+  FilesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: 'fileName'
+          AttributeType: S
+        - AttributeName: 'lastModified'
+          AttributeType: S
+      KeySchema:
+        - AttributeName: fileName
+          KeyType: HASH
+        - AttributeName: lastModified
+          KeyType: RANGE
+
+  ObjectCreatedStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: definitions/object_created.asl.json
+      Policies:
+        - CloudWatchLogsFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FilesTable
+      Type: STANDARD
+      DefinitionSubstitutions:
+        TableName: !Ref FilesTable
+      Events:
+        EBPutRule:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref FilesBucket

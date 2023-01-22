@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "event-driven-file-management"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1ab0tihzm9igl"
+s3_prefix = "event-driven-file-management"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []

@@ -1,0 +1,49 @@
+Comment: Triggered on EventBridge S3 Object Created notification
+StartAt: CheckObjectExistance
+States:
+  CheckObjectExistance:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:query'
+    Parameters:
+      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      KeyConditionExpression: 'fileName = :fileName'
+      ExpressionAttributeValues:
+        ':fileName':
+          'S.$': '$$.Event.detail.requestParamters.key'
+    OutputPath: '$.dynamoDbResult'
+    Next: ObjectExists
+  ObjectExists:
+    Type: Choice
+    Choices:
+      - Variable: '$.dynamoDbResult.Items'
+        NumericGreaterThan: 0
+        Next: UpdateObject
+    Default: PutObject
+  UpdateObject:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    Parameters:
+      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      Key:
+        fileName:
+          S: '$$.Event.detail.requestParameters.key'
+      UpdateExpression: 'set lastModified : lastModified'
+      ExpressionAttributeValues:
+        ':lastModified':
+          S: '$$.Event.detail.eventTime'
+    Next: ObjectUpdated
+  PutObject:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:putItem'
+    Parameters:
+      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      Item:
+        fileName:
+          S: '$$.Event.detail.requestParameters.key'
+        lastModified:
+          S: '$$.Event.detail.eventTime'
+    Next: ObjectAdded
+  ObjectUpdated:
+    Type: Succeed
+  ObjectAdded:
+    Type: Succeed
