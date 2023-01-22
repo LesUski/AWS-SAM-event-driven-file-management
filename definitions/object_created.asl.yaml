@@ -5,7 +5,7 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::dynamodb:query'
     Parameters:
-      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      TableName: <<TABLE_NAME>>
       KeyConditionExpression: 'fileName = :fileName'
       ExpressionAttributeValues:
         ':fileName':
@@ -23,7 +23,7 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::dynamodb:updateItem'
     Parameters:
-      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      TableName: <<TABLE_NAME>>
       Key:
         fileName:
           S: '$$.Event.detail.requestParameters.key'
@@ -36,7 +36,7 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::dynamodb:putItem'
     Parameters:
-      TableName: 'event-driven-file-management-FilesTable-66SYHKGA82RM'
+      TableName: <<TABLE_NAME>>
       Item:
         fileName:
           S: '$$.Event.detail.requestParameters.key'
